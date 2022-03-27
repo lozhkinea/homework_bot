@@ -18,9 +18,10 @@ import requests
 from dotenv import load_dotenv
 from telegram import Bot
 
-from exceptions import (ExpectedApiKeysMissed, MissingEnvironmentVariables,
+from exceptions import (ExpectedApiKeyMissed, MissingEnvironmentVariables,
                         RequestToEndpointFailed, SendMessageToTelegram,
-                        UnavailableEndpoint, UnexpectedHomeworkStatus)
+                        UnavailableEndpoint, UncorrectTypeApiAnswer,
+                        UnexpectedHomeworkStatus)
 
 load_dotenv()
 
@@ -62,26 +63,28 @@ def get_api_answer(current_timestamp):
             headers=HEADERS,
             params=params
         )
-        if response:
-            response.raise_for_status()
-    except HTTPError as he:
-        raise UnavailableEndpoint() from he
-    except Exception as e:
-        raise RequestToEndpointFailed() from e
-    else:
-        if response:
+        if not response:
+            raise RequestToEndpointFailed
+        if response.status_code == requests.codes.ok:
             return response.json()
         else:
-            logging.error('Неожиданно пустой response от api.')
+            response.raise_for_status()
+    except HTTPError as he:
+        raise UnavailableEndpoint from he
+    except Exception as e:
+        raise RequestToEndpointFailed from e
 
 
 def check_response(response):
     """Возвращает список домашних работ, доступный в ответе API."""
-    if response and len(response):
-        if 'homeworks' in response:
-            return response['homeworks']
-        else:
-            raise ExpectedApiKeysMissed()
+    if not response or not len(response):
+        raise UncorrectTypeApiAnswer
+    if 'homeworks' not in response:
+        raise TypeError
+    homeworks = response['homeworks']
+    if type(homeworks) != list:
+        raise UncorrectTypeApiAnswer
+    return homeworks
 
 
 def parse_status(homework):
@@ -97,10 +100,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка доступности переменных окружения во время запуска бота."""
-    result = PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
-    if not result:
-        raise MissingEnvironmentVariables()
-    return result
+    return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
 
 
 def main():
@@ -122,6 +122,8 @@ def main():
                 for hw in hwlist:
                     message = parse_status(hw)
                     send_message(bot, message)
+                else:
+                    raise MissingEnvironmentVariables()
                 current_timestamp = response['current_date']
             time.sleep(RETRY_TIME)
         except MissingEnvironmentVariables:
@@ -130,7 +132,7 @@ def main():
             logging.error('Сбой при запросе к эндпойнту!')
         except UnavailableEndpoint:
             logging.error('Недоступен эндпойнт!')
-        except ExpectedApiKeysMissed:
+        except ExpectedApiKeyMissed:
             logging.error('Отсутствуют ожидаемые ключи в ответе api!')
         except UnexpectedHomeworkStatus:
             logging.error('Недокументированный статус домашней работы,'

@@ -25,9 +25,14 @@ class UnavailableEndpoint(BotAssistantException):
         super().__init__('Недоступен эндпойнт!')
 
 
-class ExpectedApiKeysMissed(BotAssistantException):
+class ExpectedApiKeyMissed(BotAssistantException):
     def __init__(self):
         super().__init__('Отсутствуют ожидаемые ключи в ответе API')
+
+
+class UncorrectTypeApiAnswer(BotAssistantException):
+    def __init__(self):
+        super().__init__('Некорректнй тип ответа API')
 
 
 class UnexpectedHomeworkStatus(BotAssistantException):
