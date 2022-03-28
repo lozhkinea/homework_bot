@@ -6,36 +6,42 @@ class BotAssistantException(Exception):
 
 
 class MissingEnvironmentVariables(BotAssistantException):
-    def __init__(self):
-        super().__init__('Отсутствуют необходимые переменные окружения!')
+    def __init__(self, logging):
+        msg = 'Отсутствуют необходимые переменные окружения!'
+        super().__init__(msg)
+        logging(msg)
 
 
-class SendMessageToTelegram(BotAssistantException):
-    def __init__(self):
-        super().__init__('Сбой при отправке сообщения в тедлеграм бот!')
-
-
-class RequestToEndpointFailed(BotAssistantException):
-    def __init__(self):
-        super().__init__('Сбой при запросе к эндпойнту!')
+class SendMessageToTelegramFailed(BotAssistantException):
+    def __init__(self, logging, error):
+        msg = f'Сбой при отправке сообщения в телеграм бот: {error}'
+        super().__init__(msg)
+        logging(msg)
 
 
 class UnavailableEndpoint(BotAssistantException):
-    def __init__(self):
-        super().__init__('Недоступен эндпойнт!')
+    def __init__(self, logging):
+        msg = 'Недоступен эндпойнт!'
+        super().__init__(msg)
+        logging(msg)
 
 
-class ExpectedApiKeyMissed(BotAssistantException):
-    def __init__(self):
-        super().__init__('Отсутствуют ожидаемые ключи в ответе API')
+class RequestToEndpointFailed(BotAssistantException):
+    def __init__(self, logging, error):
+        msg = f'Сбой при запросе к эндпойнту: {error}'
+        super().__init__(msg)
+        logging(msg)
 
 
 class UncorrectTypeApiAnswer(BotAssistantException):
-    def __init__(self):
-        super().__init__('Некорректнй тип ответа API')
+    def __init__(self, logging):
+        msg = 'Некорректнй тип ответа API!'
+        super().__init__(msg)
+        logging(msg)
 
 
 class UnexpectedHomeworkStatus(BotAssistantException):
-    def __init__(self):
-        super().__init__('Недокументированный статус домашней работы,'
-                         'обнаруженный в ответе API')
+    def __init__(self, logging):
+        msg = 'Недокументированный статус домашней работы в ответе API!'
+        super().__init__(msg)
+        logging(msg)
