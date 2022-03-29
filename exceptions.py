@@ -19,13 +19,6 @@ class SendMessageToTelegramFailed(BotAssistantException):
         logging(msg)
 
 
-class UnavailableEndpoint(BotAssistantException):
-    def __init__(self, logging):
-        msg = 'Недоступен эндпойнт!'
-        super().__init__(msg)
-        logging(msg)
-
-
 class RequestToEndpointFailed(BotAssistantException):
     def __init__(self, logging, error):
         msg = f'Сбой при запросе к эндпойнту: {error}'
@@ -40,8 +33,15 @@ class UncorrectTypeApiAnswer(BotAssistantException):
         logging(msg)
 
 
-class UnexpectedHomeworkStatus(BotAssistantException):
+class HomeworksKeyNotValid(BotAssistantException):
     def __init__(self, logging):
-        msg = 'Недокументированный статус домашней работы в ответе API!'
+        msg = 'Не найден ключ "homeworks" в ответе API!'
+        super().__init__(msg)
+        logging(msg)
+
+
+class HomeworkTypeError(BotAssistantException):
+    def __init__(self, logging, error):
+        msg = f'Некорректный тип домашней работы в ответе API! {error}'
         super().__init__(msg)
         logging(msg)

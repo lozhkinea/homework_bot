@@ -1,4 +1,3 @@
-
 # Описание:
 # - раз в 10 минут опрашивает API сервиса Практикум.Домашка и проверяет
 #   статус отправленной на ревью домашней работы;
@@ -8,8 +7,8 @@
 """Бот-ассистент."""
 import logging
 import os
+import sys
 import time
-from sys import stdout
 
 import requests
 from dotenv import load_dotenv
@@ -36,66 +35,85 @@ HOMEWORK_STATUSES = {
 }
 
 
-def send_message(bot, message):
-    """Отправка сообщения в Telegram чат."""
+def send_message(bot: Bot, message: str) -> None:
+    """
+    Отправляет сообщение в Telegram чат, определяемый
+    переменной окруженияTELEGRAM_CHAT_ID.
+    """
     try:
         bot.send_message(TELEGRAM_CHAT_ID, text=message)
     except Exception as e:
-        raise _.SendMessageToTelegramFailed(logging.error, e) from e
+        raise _.SendMessageToTelegramFailed(logging.exception, e) from e
     else:
-        logging.info(f'{send_message.__doc__[:-1]}: "{message}"')
+        logging.info(f'Отправлено в Telegram: {message}')
 
 
-def get_api_answer(current_timestamp):
-    """Возвращает ответ API по заданной метке current_timestamp."""
+def get_api_answer(current_timestamp: int) -> dict:
+    """Делает запрос к единственному эндпоинту API-сервиса."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
         if response.status_code == requests.codes.not_found:
-            raise _.UnavailableEndpoint(logging.error)
+            raise _.RequestToEndpointFailed(logging.exception,
+                                            'Недоступен эндпойнт')
         if response.status_code == requests.codes.ok:
             return response.json()
         else:
             response.raise_for_status()
     except Exception as e:
-        raise _.RequestToEndpointFailed(logging.error, e) from e
+        raise _.RequestToEndpointFailed(logging.exception, e) from e
 
 
-def check_response(response):
-    """Возвращает список домашних работ, доступный в ответе API."""
+def check_response(response: dict) -> list:
+    """
+    Проверяет ответ API на корректность. Если ответ API соответствует
+    ожиданиям, то функция должна вернуть список домашних работ (он может
+    быть и пустым), доступный в ответе API по ключу 'homeworks'.
+    """
+    logging.debug(f'Ответ API: {response}')
     if not response or not len(response):
-        raise UncorrectTypeApiAnswer
+        raise _.UncorrectTypeApiAnswer(logging.exception)
     if 'homeworks' not in response:
-        logging.error('Отсутствие ожидаемых ключей в ответе API!')
+        logging.exception('Отсутствуют ожидаемые ключи в ответе API!'
+                          'Ожидается "homeworks".')
         raise TypeError
     homeworks = response['homeworks']
     if type(homeworks) != list:
-        raise UncorrectTypeApiAnswer
+        raise _.HomeworksKeyNotValid(logging.exception)
+    logging.debug(f'Список домашних работ: {homeworks}')
     return homeworks
 
 
-def parse_status(homework):
+def parse_status(homework: dict) -> str:
     """Извлекает из информации о конкретной домашней работе её статус."""
+    logging.debug(f'Домашняя работа: {homework}')
+    if type(homework) != dict:
+        raise _.HomeworkTypeError(logging.exception, 'Ожидается словарь.')
     homework_name = homework['homework_name']
     homework_status = homework['status']
     if homework_status not in HOMEWORK_STATUSES:
-        raise _.UnexpectedHomeworkStatus(logging.error)
+        raise _.HomeworkTypeError(logging.exception,
+                                  'Недокументированный статус домашней работы')
     verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
-def check_tokens():
-    """Проверка доступности переменных окружения во время запуска бота."""
+def check_tokens() -> bool:
+    """
+    Ппроверяет доступность переменных окружения,
+    которые необходимы для работы программы.
+    """
     return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
 
-def init_bot():
+
+def init_bot(level: int) -> None:
     """Настройка бота."""
     global bot
     logging.basicConfig(
         format='%(asctime)s [%(levelname)s] %(message)s',
-        level=logging.INFO,
-        stream=stdout
+        level=level,
+        stream=sys.stdout
     )
     if not check_tokens():
         raise _.MissingEnvironmentVariables(logging.critical)
@@ -111,13 +129,13 @@ def check_and_send(response):
             message = parse_status(homework)
             send_message(bot, message)
         else:
-            logging.debug('Отсутствие в ответе новых статусов.')
+            logging.debug('Отсутствуют новые статусы.')
 
 
 def main():
     """Основная логика работы бота."""
     global bot
-    init_bot()
+    init_bot(logging.INFO)
     current_timestamp = int(time.time())
     last_error = ''
     while True:
