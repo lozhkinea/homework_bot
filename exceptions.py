@@ -14,34 +14,21 @@ class MissingEnvironmentVariables(BotAssistantException):
 
 class SendMessageToTelegramFailed(BotAssistantException):
     def __init__(self, logging, error):
-        msg = f'Сбой при отправке сообщения в телеграм бот: {error}'
+        msg = f'Отправка в телеграм не удалась: {error}'
         super().__init__(msg)
         logging(msg)
 
 
 class RequestToEndpointFailed(BotAssistantException):
-    def __init__(self, logging, error):
-        msg = f'Сбой при запросе к эндпойнту: {error}'
-        super().__init__(msg)
-        logging(msg)
+    def __init__(self, error):
+        super().__init__(f'Сбой при запросе к эндпойнту: {error}')
 
 
-class UncorrectTypeApiAnswer(BotAssistantException):
-    def __init__(self, logging):
-        msg = 'Некорректнй тип ответа API!'
-        super().__init__(msg)
-        logging(msg)
-
-
-class HomeworksKeyNotValid(BotAssistantException):
-    def __init__(self, logging):
-        msg = 'Не найден ключ "homeworks" в ответе API!'
-        super().__init__(msg)
-        logging(msg)
+class ApiAnswerTypeError(BotAssistantException):
+    def __init__(self, error):
+        super().__init__('Некорректнй тип ответа API! {error}')
 
 
 class HomeworkTypeError(BotAssistantException):
-    def __init__(self, logging, error):
-        msg = f'Некорректный тип домашней работы в ответе API! {error}'
-        super().__init__(msg)
-        logging(msg)
+    def __init__(self, error):
+        super().__init__(f'Некорректный тип домашки в ответе API! {error}')
