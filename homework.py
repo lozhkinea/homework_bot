@@ -28,7 +28,7 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
-HOMEWORK_STATUSES = {
+HOMEWORK_VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -72,7 +72,7 @@ def check_response(response: dict) -> list:
         )
         raise TypeError
     homeworks = response['homeworks']
-    if type(homeworks) != list:
+    if not isinstance(homeworks, list):
         raise _.ApiAnswerTypeError('Не найден ключ "homeworks" в ответе API!')
     return homeworks
 
@@ -84,15 +84,15 @@ def parse_status(homework: dict) -> str:
         raise _.HomeworkTypeError('Ожидается словарь.')
     homework_name = homework['homework_name']
     homework_status = homework['status']
-    if homework_status not in HOMEWORK_STATUSES:
+    if homework_status not in HOMEWORK_VERDICTS:
         raise _.HomeworkTypeError('Недокументированный статус домашней работы')
-    verdict = HOMEWORK_STATUSES[homework_status]
+    verdict = HOMEWORK_VERDICTS[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
 def check_tokens() -> bool:
     """Ппроверяет доступность переменных окружения."""
-    return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
+    return all((PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID))
 
 
 def init_bot(level: int) -> None:
