@@ -131,7 +131,7 @@ def check_and_send(response):
 def main():
     """Основная логика работы бота."""
     global bot
-    init_bot(logging.DEBUG)
+    init_bot(logging.INFO)
     current_timestamp = int(time.time())
     last_error = ''
     while True:
