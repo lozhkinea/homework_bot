@@ -139,7 +139,7 @@ def main():
                 logging.debug(f'Последняя ошибка: {last_error}')
                 message = f'Сбой в работе программы: {error}'
                 logging.exception(message)
-                # send_message(bot, message)
+                send_message(bot, message)
             time.sleep(RETRY_TIME)
         else:
             pass
