@@ -36,10 +36,7 @@ HOMEWORK_STATUSES = {
 
 
 def send_message(bot: Bot, message: str) -> None:
-    """
-    Отправляет сообщение в Telegram чат, определяемый
-    переменной окружения TELEGRAM_CHAT_ID.
-    """
+    """Отправляет сообщение в Telegram чат."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, text=message)
     except Exception as e:
@@ -62,10 +59,9 @@ def get_api_answer(current_timestamp: int) -> dict:
 
 
 def check_response(response: dict) -> list:
-    """
-    Проверяет ответ API на корректность. Если ответ API соответствует
-    ожиданиям, то функция должна вернуть список домашних работ (он может
-    быть и пустым), доступный в ответе API по ключу 'homeworks'.
+    """Проверяет ответ API на корректность.
+    Если ответ API соответствует ожиданиям, то функция вернет список домашних
+    работ, доступный в ответе API по ключу 'homeworks'.
     """
     logging.debug(f'Ответ API: {response}')
     if not response or not len(response):
@@ -95,10 +91,7 @@ def parse_status(homework: dict) -> str:
 
 
 def check_tokens() -> bool:
-    """
-    Ппроверяет доступность переменных окружения,
-    которые необходимы для работы программы.
-    """
+    """Ппроверяет доступность переменных окружения."""
     return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
 
 

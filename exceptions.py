@@ -12,13 +12,6 @@ class MissingEnvironmentVariables(BotAssistantException):
         logging(msg)
 
 
-class SendMessageToTelegramFailed(BotAssistantException):
-    def __init__(self, logging, error):
-        msg = f'Отправка в телеграм не удалась: {error}'
-        super().__init__(msg)
-        logging(msg)
-
-
 class RequestToEndpointFailed(BotAssistantException):
     def __init__(self, error):
         super().__init__(f'Сбой при запросе к эндпойнту: {error}')
